@@ -26,31 +26,30 @@ namespace ExecQueue
     public override IMessage Invoke(IMessage msg)
     {
       var methodCall = (IMethodCallMessage)msg;
-      var method = (MethodInfo)methodCall.MethodBase;
 
       IMessage message;
-      if (MethodDoesNotHaveAnyOutput(method, methodCall))
+      if (MethodDoesNotHaveAnyOutput(methodCall))
       {
-        message = BeginInvoke(methodCall, methodCall.Args, (MethodInfo)methodCall.MethodBase);
+        message = BeginInvoke(methodCall);
       }
       else
       {
-        message = Invoke(methodCall, methodCall.Args, (MethodInfo)methodCall.MethodBase);
+        message = Invoke(methodCall);
       }
 
       return message;
     }
 
-    private static bool MethodDoesNotHaveAnyOutput(MethodInfo method, IMethodCallMessage methodCall)
+    private static bool MethodDoesNotHaveAnyOutput(IMethodCallMessage methodCall)
     {
-      return method.ReturnType == typeof(void) && methodCall.ArgCount == methodCall.InArgCount;
+      return ((MethodInfo)methodCall.MethodBase).ReturnType == typeof(void) && methodCall.ArgCount == methodCall.InArgCount;
     }
 
-    private IMessage BeginInvoke(IMethodCallMessage methodCall, object[] args, MethodInfo methodBase)
+    private IMessage BeginInvoke(IMethodCallMessage methodCall)
     {
       try
       {
-        _executionQueue.BeginInvoke(() => methodBase.Invoke(_instance, args));
+        _executionQueue.BeginInvoke(() => methodCall.MethodBase.Invoke(_instance, methodCall.Args));
         return new ReturnMessage(null, null, 0, methodCall.LogicalCallContext, methodCall);
       }
       catch (Exception e)
@@ -64,9 +63,11 @@ namespace ExecQueue
       }
     }
 
-    private IMessage Invoke(IMethodCallMessage methodCall, object[] args, MethodInfo methodBase)
+    private IMessage Invoke(IMethodCallMessage methodCall)
     {
-      var result = _executionQueue.InvokeAsync(() => methodBase.Invoke(_instance, args)).Result;
+      var args = methodCall.Args;
+
+      var result = _executionQueue.InvokeAsync(() => methodCall.MethodBase.Invoke(_instance, args)).Result;
 
       return new ReturnMessage(result, args, args.Length, methodCall.LogicalCallContext, methodCall);
     }
