@@ -10,11 +10,9 @@ namespace ExecQueueTests
     {
       void Tell();
       bool Ask();
-
       T Repeate<T>(T value);
-
       void Assign5(out int willBe5);
-      void AssignWithFirstVal<T>(T firstVal, out T assigned, ref bool invertMe);
+      void AssignWithFirstVal<T>(out T assigned, ref bool invertMe, T input);
     }
     class SimpleCalls : ISimpleCalls
     {
@@ -38,10 +36,11 @@ namespace ExecQueueTests
         willBe5 = 5;
       }
 
-      public void AssignWithFirstVal<T>(T firstVal, out T assigned, ref bool invertMe)
+      public void AssignWithFirstVal<T>(out T assigned, ref bool invertMe, T input)
       {
-        assigned = firstVal;
+        assigned = input;
         invertMe = !invertMe;
+        input = default(T);
       }
     }
     [Test]
@@ -94,9 +93,11 @@ namespace ExecQueueTests
 
       string assigned;
       bool toInvert = false;
-      proxiedSimpleCalls.AssignWithFirstVal("55", out assigned, ref toInvert);
+      var firstVal = "55";
+      proxiedSimpleCalls.AssignWithFirstVal(out assigned, ref toInvert, firstVal);
 
       Assert.AreEqual("55", assigned);
+      Assert.AreEqual("55", firstVal);
       Assert.IsTrue(toInvert);
     }
   }
