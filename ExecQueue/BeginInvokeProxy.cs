@@ -5,7 +5,7 @@ using System.Runtime.Remoting.Proxies;
 
 namespace ExecQueue
 {
-  public class BeginInvokeProxy<T> : RealProxy
+  public class BeginInvokeProxy<T> : RealProxy where T : class
   {
     private readonly T _instance;
     private readonly IExecutionQueue _executionQueue;
