@@ -29,23 +29,28 @@ namespace ExecQueue
       var method = (MethodInfo)methodCall.MethodBase;
 
       IMessage message;
-      if (method.ReturnType == typeof(void))
+      if (MethodDoesNotHaveAnyOutput(method, methodCall))
       {
-        message = BeginInvoke(methodCall, methodCall.InArgs, (MethodInfo)methodCall.MethodBase);
+        message = BeginInvoke(methodCall, methodCall.Args, (MethodInfo)methodCall.MethodBase);
       }
       else
       {
-        message = Invoke(methodCall, methodCall.InArgs, (MethodInfo)methodCall.MethodBase);
+        message = Invoke(methodCall, methodCall.Args, (MethodInfo)methodCall.MethodBase);
       }
 
       return message;
     }
 
-    private IMessage BeginInvoke(IMethodCallMessage methodCall, object[] inArgs, MethodInfo methodBase)
+    private static bool MethodDoesNotHaveAnyOutput(MethodInfo method, IMethodCallMessage methodCall)
+    {
+      return method.ReturnType == typeof(void) && methodCall.ArgCount == methodCall.InArgCount;
+    }
+
+    private IMessage BeginInvoke(IMethodCallMessage methodCall, object[] args, MethodInfo methodBase)
     {
       try
       {
-        _executionQueue.BeginInvoke(() => methodBase.Invoke(_instance, inArgs));
+        _executionQueue.BeginInvoke(() => methodBase.Invoke(_instance, args));
         return new ReturnMessage(null, null, 0, methodCall.LogicalCallContext, methodCall);
       }
       catch (Exception e)
@@ -59,10 +64,11 @@ namespace ExecQueue
       }
     }
 
-    private IMessage Invoke(IMethodCallMessage methodCall, object[] inArgs, MethodInfo methodBase)
+    private IMessage Invoke(IMethodCallMessage methodCall, object[] args, MethodInfo methodBase)
     {
-      var result = _executionQueue.InvokeAsync(() => methodBase.Invoke(_instance, inArgs)).Result;
-      return new ReturnMessage(result, null, 0, methodCall.LogicalCallContext, methodCall);
+      var result = _executionQueue.InvokeAsync(() => methodBase.Invoke(_instance, args)).Result;
+
+      return new ReturnMessage(result, args, args.Length, methodCall.LogicalCallContext, methodCall);
     }
   }
 }
