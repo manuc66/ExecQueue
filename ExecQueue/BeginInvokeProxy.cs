@@ -10,16 +10,16 @@ namespace ExecQueue
     private readonly T _instance;
     private readonly IExecutionQueue _executionQueue;
 
-    private BeginInvokeProxy(T instance, IExecutionQueue concurrentExecutionQueue)
+    private BeginInvokeProxy(T instance, IExecutionQueue executionQueue)
       : base(typeof(T))
     {
       _instance = instance;
-      _executionQueue = concurrentExecutionQueue;
+      _executionQueue = executionQueue;
     }
 
-    public static T Create(T instance, IExecutionQueue concurrentExecutionQueue)
+    public static T Create(T instance, IExecutionQueue executionQueue)
     {
-      var actorProxy = new BeginInvokeProxy<T>(instance, concurrentExecutionQueue);
+      var actorProxy = new BeginInvokeProxy<T>(instance, executionQueue);
       return (T)actorProxy.GetTransparentProxy();
     }
 
@@ -49,17 +49,15 @@ namespace ExecQueue
     {
       try
       {
-        _executionQueue.BeginInvoke(() => methodCall.MethodBase.Invoke(_instance, methodCall.Args));
         return new ReturnMessage(null, null, 0, methodCall.LogicalCallContext, methodCall);
       }
-      catch (Exception e)
+      finally
       {
-        if (e is TargetInvocationException && e.InnerException != null)
+        var parameters = methodCall.Args;
+        _executionQueue.BeginInvoke(() =>
         {
-          return new ReturnMessage(e.InnerException, methodCall);
-        }
-
-        return new ReturnMessage(e, methodCall);
+          methodCall.MethodBase.Invoke(_instance, parameters);
+        });
       }
     }
 

@@ -29,13 +29,9 @@ namespace ExecQueue
 
     public Task<TResult> InvokeAsync<TResult>(Func<TResult> action)
     {
-      var taskCompletionSource = new TaskCompletionSource<TResult>();
-      _toExecute.Add(() =>
-      {
-        var result = action();
-        taskCompletionSource.SetResult(result);
-      });
-      return taskCompletionSource.Task;
+      var funcTaskWrapper = new FuncTaskWrapper<TResult>(action);
+      _toExecute.Add(funcTaskWrapper.Action);
+      return funcTaskWrapper.Task;
     }
 
     public void Run(CancellationToken cancellationToken)
