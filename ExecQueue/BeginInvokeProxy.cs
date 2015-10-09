@@ -8,16 +8,16 @@ namespace ExecQueue
   public class BeginInvokeProxy<T> : RealProxy
   {
     private readonly T _instance;
-    private readonly ConcurrentExecutionQueue _mConcurrentExecutionQueue;
+    private readonly IExecutionQueue _executionQueue;
 
-    private BeginInvokeProxy(T instance, ConcurrentExecutionQueue concurrentExecutionQueue)
+    private BeginInvokeProxy(T instance, IExecutionQueue concurrentExecutionQueue)
       : base(typeof(T))
     {
       _instance = instance;
-      _mConcurrentExecutionQueue = concurrentExecutionQueue;
+      _executionQueue = concurrentExecutionQueue;
     }
 
-    public static T Create(T instance, ConcurrentExecutionQueue concurrentExecutionQueue)
+    public static T Create(T instance, IExecutionQueue concurrentExecutionQueue)
     {
       var actorProxy = new BeginInvokeProxy<T>(instance, concurrentExecutionQueue);
       return (T)actorProxy.GetTransparentProxy();
@@ -45,7 +45,7 @@ namespace ExecQueue
     {
       try
       {
-        _mConcurrentExecutionQueue.BeginInvoke(() => methodBase.Invoke(_instance, inArgs));
+        _executionQueue.BeginInvoke(() => methodBase.Invoke(_instance, inArgs));
         return new ReturnMessage(null, null, 0, methodCall.LogicalCallContext, methodCall);
       }
       catch (Exception e)
@@ -61,7 +61,7 @@ namespace ExecQueue
 
     private IMessage Invoke(IMethodCallMessage methodCall, object[] inArgs, MethodInfo methodBase)
     {
-      var result = _mConcurrentExecutionQueue.InvokeAsync(() => methodBase.Invoke(_instance, inArgs)).Result;
+      var result = _executionQueue.InvokeAsync(() => methodBase.Invoke(_instance, inArgs)).Result;
       return new ReturnMessage(result, null, 0, methodCall.LogicalCallContext, methodCall);
     }
   }
