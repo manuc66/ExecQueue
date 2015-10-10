@@ -16,7 +16,10 @@ namespace ExecQueueTests
       void AssignWithFirstVal<T>(out T assigned, ref bool invertMe, T input);
       void ThowOnVoid();
       bool ThowOnFunc();
+
+      int SomeProperty { get; set; }
     }
+
     class SimpleCalls : ISimpleCalls
     {
       public bool Called;
@@ -60,6 +63,8 @@ namespace ExecQueueTests
         Called = true;
         throw new System.NotImplementedException();
       }
+
+      public int SomeProperty { get; set; }
     }
     [Test]
     public void InterceptVoidMethods()
@@ -142,7 +147,7 @@ namespace ExecQueueTests
     }
 
     [Test]
-    public void ExceptionOnNonVoidIsIgnored()
+    public void ExceptionOnNonVoidIsRethrown()
     {
       var simpleCalls = new SimpleCalls();
       var proxiedSimpleCalls = BeginInvokeProxy<ISimpleCalls>.Create(simpleCalls, new NonRecursiveExecutor());
@@ -150,18 +155,28 @@ namespace ExecQueueTests
       try
       {
         proxiedSimpleCalls.ThowOnFunc();
-      }
-      catch (AggregateException e)
-      {
-        Assert.IsNotNull(e);
-        Assert.IsInstanceOf<NotImplementedException>(e.InnerExceptions[0]);
-      }
-      catch (Exception)
-      {
         Assert.Fail();
+      }
+      catch (Exception e)
+      {
+        Assert.IsInstanceOf<NotImplementedException>(e);
       }
 
       Assert.IsTrue(simpleCalls.Called);
+    }
+
+    [Test]
+    public void PropertyIshandled()
+    {
+      var simpleCalls = new SimpleCalls();
+      var proxiedSimpleCalls = BeginInvokeProxy<ISimpleCalls>.Create(simpleCalls, new NonRecursiveExecutor());
+
+      proxiedSimpleCalls.SomeProperty = 5;
+
+
+      Assert.AreEqual(5, simpleCalls.SomeProperty);
+
+      Assert.AreEqual(5, proxiedSimpleCalls.SomeProperty);
     }
   }
 }

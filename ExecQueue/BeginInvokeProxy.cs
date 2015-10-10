@@ -1,6 +1,9 @@
+using System;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Runtime.Remoting.Messaging;
 using System.Runtime.Remoting.Proxies;
+using System.Threading.Tasks;
 
 namespace ExecQueue
 {
@@ -58,9 +61,17 @@ namespace ExecQueue
     {
       var args = methodCall.Args;
 
-      var result = _executionQueue.InvokeAsync(() => methodCall.MethodBase.Invoke(_instance, args)).Result;
+      var invokeAsync = _executionQueue.InvokeAsync(() => methodCall.MethodBase.Invoke(_instance, args));
 
-      return new ReturnMessage(result, args, args.Length, methodCall.LogicalCallContext, methodCall);
+      try
+      {
+        return new ReturnMessage(invokeAsync.Result, args, args.Length, methodCall.LogicalCallContext, methodCall);
+      }
+      catch (Exception ex)
+      {
+        ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+        throw;
+      }
     }
   }
 }
