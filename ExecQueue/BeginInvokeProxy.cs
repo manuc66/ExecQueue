@@ -46,18 +46,12 @@ namespace ExecQueue
 
     private IMessage BeginInvoke(IMethodCallMessage methodCall)
     {
-      try
+      var parameters = methodCall.Args;
+      _executionQueue.BeginInvoke(() =>
       {
-        return new ReturnMessage(null, null, 0, methodCall.LogicalCallContext, methodCall);
-      }
-      finally
-      {
-        var parameters = methodCall.Args;
-        _executionQueue.BeginInvoke(() =>
-        {
-          methodCall.MethodBase.Invoke(_instance, parameters);
-        });
-      }
+        methodCall.MethodBase.Invoke(_instance, parameters);
+      });
+      return new ReturnMessage(null, null, 0, methodCall.LogicalCallContext, methodCall);
     }
 
     private IMessage Invoke(IMethodCallMessage methodCall)
