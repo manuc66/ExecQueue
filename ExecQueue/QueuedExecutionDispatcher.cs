@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace ExecQueue
 {
-  public class QueuedDelayedExecutor : IExecutionQueue
+  public class QueuedExecutionDispatcher : IExecutionDispatcher
   {
     private readonly Queue<Action> _toExecute = new Queue<Action>();
     private bool _running;
@@ -13,6 +13,16 @@ namespace ExecQueue
     public virtual void BeginInvoke(Action action)
     {
       _toExecute.Enqueue(action);
+    }
+
+    public virtual void Invoke(Action action)
+    {
+      InvokeAsync(action).Wait();
+    }
+
+    public virtual TResult Invoke<TResult>(Func<TResult> action)
+    {
+      return InvokeAsync(action).Result;
     }
 
     public virtual Task InvokeAsync(Action action)

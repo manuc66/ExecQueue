@@ -8,18 +8,18 @@ namespace ExecQueue
   public class InvokeProxy<T> : RealProxy where T : class
   {
     protected readonly T Instance;
-    protected readonly IExecutionQueue ExecutionQueue;
+    protected readonly IExecutionDispatcher ExecutionDispatcher;
 
-    protected InvokeProxy(T instance, IExecutionQueue executionQueue)
+    protected InvokeProxy(T instance, IExecutionDispatcher executionDispatcher)
       : base(typeof(T))
     {
       Instance = instance;
-      ExecutionQueue = executionQueue;
+      ExecutionDispatcher = executionDispatcher;
     }
 
-    public static T Create(T instance, IExecutionQueue executionQueue)
+    public static T Create(T instance, IExecutionDispatcher executionDispatcher)
     {
-      var actorProxy = new InvokeProxy<T>(instance, executionQueue);
+      var actorProxy = new InvokeProxy<T>(instance, executionDispatcher);
       return (T)actorProxy.GetTransparentProxy();
     }
 
@@ -32,7 +32,7 @@ namespace ExecQueue
     {
       var args = methodCall.Args;
 
-      var invokeAsync = ExecutionQueue.InvokeAsync(() => methodCall.MethodBase.Invoke(Instance, args));
+      var invokeAsync = ExecutionDispatcher.InvokeAsync(() => methodCall.MethodBase.Invoke(Instance, args));
 
       try
       {

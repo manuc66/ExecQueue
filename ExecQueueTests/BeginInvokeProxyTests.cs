@@ -70,7 +70,7 @@ namespace ExecQueueTests
     public void InterceptVoidMethods()
     {
       var simpleCalls = new SimpleCalls();
-      var proxiedSimpleCalls = BeginInvokeProxy<ISimpleCalls>.Create(simpleCalls, new NonRecursiveExecutor());
+      var proxiedSimpleCalls = BeginInvokeProxy<ISimpleCalls>.Create(simpleCalls, new NonRecursiveExecutionDispatcher());
 
       proxiedSimpleCalls.Tell();
 
@@ -81,7 +81,7 @@ namespace ExecQueueTests
     public void InterceptMethodsThatRetuns()
     {
       var simpleCalls = new SimpleCalls();
-      var proxiedSimpleCalls = BeginInvokeProxy<ISimpleCalls>.Create(simpleCalls, new NonRecursiveExecutor());
+      var proxiedSimpleCalls = BeginInvokeProxy<ISimpleCalls>.Create(simpleCalls, new NonRecursiveExecutionDispatcher());
 
       Assert.IsTrue(proxiedSimpleCalls.Ask());
       Assert.IsTrue(simpleCalls.Called);
@@ -91,7 +91,7 @@ namespace ExecQueueTests
     public void InterceptGenericMethods()
     {
       var simpleCalls = new SimpleCalls();
-      var proxiedSimpleCalls = BeginInvokeProxy<ISimpleCalls>.Create(simpleCalls, new NonRecursiveExecutor());
+      var proxiedSimpleCalls = BeginInvokeProxy<ISimpleCalls>.Create(simpleCalls, new NonRecursiveExecutionDispatcher());
 
       Assert.AreEqual(5, proxiedSimpleCalls.Repeate(5));
     }
@@ -100,7 +100,7 @@ namespace ExecQueueTests
     public void OutParameterAreHandled()
     {
       var simpleCalls = new SimpleCalls();
-      var proxiedSimpleCalls = BeginInvokeProxy<ISimpleCalls>.Create(simpleCalls, new NonRecursiveExecutor());
+      var proxiedSimpleCalls = BeginInvokeProxy<ISimpleCalls>.Create(simpleCalls, new NonRecursiveExecutionDispatcher());
 
       int expect5;
       proxiedSimpleCalls.Assign5(out expect5);
@@ -112,7 +112,7 @@ namespace ExecQueueTests
     public void OutParameterMixedWithOtherInGenericMethodAreHandled()
     {
       var simpleCalls = new SimpleCalls();
-      var proxiedSimpleCalls = BeginInvokeProxy<ISimpleCalls>.Create(simpleCalls, new NonRecursiveExecutor());
+      var proxiedSimpleCalls = BeginInvokeProxy<ISimpleCalls>.Create(simpleCalls, new NonRecursiveExecutionDispatcher());
 
       string assigned;
       bool toInvert = false;
@@ -128,7 +128,7 @@ namespace ExecQueueTests
     public void ExceptionOnVoidIsIgnored()
     {
       var simpleCalls = new SimpleCalls();
-      var executionQueue = new QueuedDelayedExecutor();
+      var executionQueue = new QueuedExecutionDispatcher();
       var proxiedSimpleCalls = BeginInvokeProxy<ISimpleCalls>.Create(simpleCalls, executionQueue);
 
       proxiedSimpleCalls.ThowOnVoid();
@@ -150,7 +150,7 @@ namespace ExecQueueTests
     public void ExceptionOnNonVoidIsRethrown()
     {
       var simpleCalls = new SimpleCalls();
-      var proxiedSimpleCalls = BeginInvokeProxy<ISimpleCalls>.Create(simpleCalls, new NonRecursiveExecutor());
+      var proxiedSimpleCalls = BeginInvokeProxy<ISimpleCalls>.Create(simpleCalls, new NonRecursiveExecutionDispatcher());
 
       try
       {
@@ -169,7 +169,7 @@ namespace ExecQueueTests
     public void PropertyIshandled()
     {
       var simpleCalls = new SimpleCalls();
-      var proxiedSimpleCalls = BeginInvokeProxy<ISimpleCalls>.Create(simpleCalls, new NonRecursiveExecutor());
+      var proxiedSimpleCalls = BeginInvokeProxy<ISimpleCalls>.Create(simpleCalls, new NonRecursiveExecutionDispatcher());
 
       proxiedSimpleCalls.SomeProperty = 5;
 

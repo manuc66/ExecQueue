@@ -10,7 +10,7 @@ namespace ExecQueueTests
     public void MethodAreCalled()
     {
       int i = 0;
-      new NonRecursiveExecutor().BeginInvoke(() => { i = 5; });
+      new NonRecursiveExecutionDispatcher().BeginInvoke(() => { i = 5; });
       Assert.That(i == 5);
     }
   }

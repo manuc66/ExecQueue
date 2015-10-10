@@ -2,33 +2,33 @@
 {
   class CalculatorExecQueueDelegator : ICalculator
   {
-    private readonly IExecutionQueue _serviceExecutor;
+    private readonly IExecutionDispatcher _executionDispatcher;
     private readonly ICalculator _calculator;
 
-    public CalculatorExecQueueDelegator(IExecutionQueue serviceExecutor, ICalculator calculator)
+    public CalculatorExecQueueDelegator(IExecutionDispatcher executionDispatcher, ICalculator calculator)
     {
-      _serviceExecutor = serviceExecutor;
+      _executionDispatcher = executionDispatcher;
       _calculator = calculator;
     }
 
     public void SetValue(int val)
     {
-      _serviceExecutor.BeginInvoke(() => _calculator.SetValue(val));
+      _executionDispatcher.BeginInvoke(() => _calculator.SetValue(val));
     }
 
     public void Inc()
     {
-      _serviceExecutor.BeginInvoke(() => _calculator.Inc());
+      _executionDispatcher.BeginInvoke(() => _calculator.Inc());
     }
 
     public void Sub()
     {
-      _serviceExecutor.BeginInvoke(() => _calculator.Sub());
+      _executionDispatcher.BeginInvoke(() => _calculator.Sub());
     }
 
     public int Result()
     {
-      return _serviceExecutor.InvokeAsync(() => _calculator.Result()).Result;
+      return _executionDispatcher.InvokeAsync(() => _calculator.Result()).Result;
     }
   }
 }

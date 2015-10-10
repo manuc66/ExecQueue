@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace ExecQueue
 {
-  public class ConcurrentExecutionQueue : IExecutionQueue
+  public class ConcurrentExecutionDispatcher : IExecutionDispatcher
   {
     private readonly Action<Exception> _handleActionException;
     private readonly BlockingCollection<Action> _toExecute = new BlockingCollection<Action>();
     private static readonly object Void = new object();
 
-    public ConcurrentExecutionQueue(Action<Exception> handleActionException)
+    public ConcurrentExecutionDispatcher(Action<Exception> handleActionException)
     {
       _handleActionException = handleActionException;
     }
@@ -20,6 +20,16 @@ namespace ExecQueue
     public void BeginInvoke(Action action)
     {
       _toExecute.Add(action);
+    }
+
+    public void Invoke(Action action)
+    {
+      InvokeAsync(action).Wait();
+    }
+
+    public TResult Invoke<TResult>(Func<TResult> action)
+    {
+      return InvokeAsync(action).Result;
     }
 
     public Task InvokeAsync(Action action)

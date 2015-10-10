@@ -5,11 +5,11 @@ namespace ExecQueue
 {
   public class BeginInvokeProxy<T> : InvokeProxy<T> where T : class
   {
-    protected BeginInvokeProxy(T instance, IExecutionQueue executionQueue) : base(instance, executionQueue) { }
+    protected BeginInvokeProxy(T instance, IExecutionDispatcher executionDispatcher) : base(instance, executionDispatcher) { }
 
-    public new static T Create(T instance, IExecutionQueue executionQueue)
+    public new static T Create(T instance, IExecutionDispatcher executionDispatcher)
     {
-      var actorProxy = new BeginInvokeProxy<T>(instance, executionQueue);
+      var actorProxy = new BeginInvokeProxy<T>(instance, executionDispatcher);
       return (T)actorProxy.GetTransparentProxy();
     }
 
@@ -26,7 +26,7 @@ namespace ExecQueue
     private IMessage BeginInvoke(IMethodCallMessage methodCall)
     {
       var parameters = methodCall.Args;
-      ExecutionQueue.BeginInvoke(() =>
+      ExecutionDispatcher.BeginInvoke(() =>
       {
         methodCall.MethodBase.Invoke(Instance, parameters);
       });

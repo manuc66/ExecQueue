@@ -8,7 +8,7 @@ namespace ExecQueue.Sample
   {
     static void Main(string[] args)
     {
-      var actionQueue = new ConcurrentExecutionQueue(e => { Console.Error.WriteLine(e.ToString()); });
+      var actionQueue = new ConcurrentExecutionDispatcher(e => { Console.Error.WriteLine(e.ToString()); });
       var calculator = BeginInvokeProxy<ICalculator>.Create(new Calculator(), actionQueue);
 
       var cancellationTokenSource = ExecuteActionsAsync(actionQueue);
@@ -31,7 +31,7 @@ namespace ExecQueue.Sample
       Console.ReadKey();
     }
 
-    public static CancellationTokenSource ExecuteActionsAsync(ConcurrentExecutionQueue actions)
+    public static CancellationTokenSource ExecuteActionsAsync(ConcurrentExecutionDispatcher actions)
     {
       var cancellationTokenSource = new CancellationTokenSource();
 
