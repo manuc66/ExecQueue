@@ -51,6 +51,7 @@
     <Compile Include="BeginInvokeProxy.cs" />
     <Compile Include="FuncTaskWrapper.cs" />
     <Compile Include="IExecutionQueue.cs" />
+    <Compile Include="InvokeProxy.cs" />
     <Compile Include="NonRecursiveExecutor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QueuedDelayedExecutor.cs" />

@@ -1,25 +1,13 @@
-using System;
 using System.Reflection;
-using System.Runtime.ExceptionServices;
 using System.Runtime.Remoting.Messaging;
-using System.Runtime.Remoting.Proxies;
-using System.Threading.Tasks;
 
 namespace ExecQueue
 {
-  public class BeginInvokeProxy<T> : RealProxy where T : class
+  public class BeginInvokeProxy<T> : InvokeProxy<T> where T : class
   {
-    private readonly T _instance;
-    private readonly IExecutionQueue _executionQueue;
+    protected BeginInvokeProxy(T instance, IExecutionQueue executionQueue) : base(instance, executionQueue) { }
 
-    private BeginInvokeProxy(T instance, IExecutionQueue executionQueue)
-      : base(typeof(T))
-    {
-      _instance = instance;
-      _executionQueue = executionQueue;
-    }
-
-    public static T Create(T instance, IExecutionQueue executionQueue)
+    public new static T Create(T instance, IExecutionQueue executionQueue)
     {
       var actorProxy = new BeginInvokeProxy<T>(instance, executionQueue);
       return (T)actorProxy.GetTransparentProxy();
@@ -27,51 +15,27 @@ namespace ExecQueue
 
     public override IMessage Invoke(IMessage msg)
     {
-      var methodCall = (IMethodCallMessage)msg;
+      var methodCallMessage = (IMethodCallMessage)msg;
 
-      IMessage message;
-      if (MethodDoesNotHaveAnyOutput(methodCall))
-      {
-        message = BeginInvoke(methodCall);
-      }
-      else
-      {
-        message = Invoke(methodCall);
-      }
+      if (MethodHaveOutput(methodCallMessage))
+        return base.Invoke(methodCallMessage);
 
-      return message;
-    }
-
-    private static bool MethodDoesNotHaveAnyOutput(IMethodCallMessage methodCall)
-    {
-      return ((MethodInfo)methodCall.MethodBase).ReturnType == typeof(void) && methodCall.ArgCount == methodCall.InArgCount;
+      return BeginInvoke(methodCallMessage);
     }
 
     private IMessage BeginInvoke(IMethodCallMessage methodCall)
     {
       var parameters = methodCall.Args;
-      _executionQueue.BeginInvoke(() =>
+      ExecutionQueue.BeginInvoke(() =>
       {
-        methodCall.MethodBase.Invoke(_instance, parameters);
+        methodCall.MethodBase.Invoke(Instance, parameters);
       });
       return new ReturnMessage(null, null, 0, methodCall.LogicalCallContext, methodCall);
     }
 
-    private IMessage Invoke(IMethodCallMessage methodCall)
+    private static bool MethodHaveOutput(IMethodCallMessage methodCall)
     {
-      var args = methodCall.Args;
-
-      var invokeAsync = _executionQueue.InvokeAsync(() => methodCall.MethodBase.Invoke(_instance, args));
-
-      try
-      {
-        return new ReturnMessage(invokeAsync.Result, args, args.Length, methodCall.LogicalCallContext, methodCall);
-      }
-      catch (Exception ex)
-      {
-        ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
-        throw;
-      }
+      return ((MethodInfo)methodCall.MethodBase).ReturnType != typeof(void) || methodCall.ArgCount != methodCall.InArgCount;
     }
   }
 }
